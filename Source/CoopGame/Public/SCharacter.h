@@ -6,6 +6,11 @@
 #include "GameFramework/Character.h"
 #include "SCharacter.generated.h"
 
+class UCameraComponent;
+class USpringArmComponent;
+class ASWeapon;
+class USHealthComponent;
+
 UCLASS()
 class COOPGAME_API ASCharacter : public ACharacter
 {
@@ -19,56 +24,53 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	void MoveForward(float value);
+	void MoveForward(float Value);
 
-	void MoveRight(float value);
+	void MoveRight(float Value);
 
 	void BeginCrouch();
 
 	void EndCrouch();
 
-	void BeginZoom();
-
-	void EndZoom();
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UCameraComponent* CameraComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class UCameraComponent* CameraComp;
+	USpringArmComponent* SpringArmComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class USpringArmComponent* SpringArmComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class USHealthComponent* HealthComponent;
+	USHealthComponent* HealthComp;
 
 	bool bWantsToZoom;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	float ZoomedFOV;
 
-	float DefaultFOV;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 0, ClampMax = 100))
+	UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 0.1, ClampMax = 100))
 	float ZoomInterpSpeed;
 
-	class ASWeapon* CurrentWeapon;
+	/* Default FOV set during begin play */
+	float DefaultFOV;
 
-	void StartFire();
+	void BeginZoom();
 
-	void StopFire();
+	void EndZoom();
 
-	UFUNCTION()
-	void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float
-		HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy,
-		AActor* DamageCauser);
-
-	UPROPERTY(BlueprintReadOnly, Category = "Player")
-	bool bDied;
+	UPROPERTY(Replicated)
+	ASWeapon* CurrentWeapon;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	TSubclassOf<ASWeapon> StarterWeaponClass;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
 	FName WeaponAttachSocketName;
+
+	UFUNCTION()
+	void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+	/* Pawn died previously */
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player")
+	bool bDied;
 
 public:	
 	// Called every frame
@@ -78,4 +80,10 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual FVector GetPawnViewLocation() const override;
+
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	void StartFire();
+
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	void StopFire();
 };
